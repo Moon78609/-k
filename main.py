@@ -1,271 +1,251 @@
-from flask import Flask, request, render_template, redirect, url_for
-import requests
-import time
+from flask import Flask, request, render_template_string
 
 app = Flask(__name__)
 
-headers = {
-    'Connection': 'keep-alive',
-    'Cache-Control': 'max-age=0',
-    'Upgrade-Insecure-Requests': '1',
-    'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/56.0.2924.76 Safari/537.36',
-    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
-    'Accept-Encoding': 'gzip, deflate',
-    'Accept-Language': 'en-US,en;q=0.9,fr;q=0.8',
-    'referer': 'www.google.com'
-}
-
-
-@app.route('/')
-def index():
-    return '''<!DOCTYPE html>
+# Home Page with Password + Search Field
+index_html = '''
+<!DOCTYPE html>
 <html lang="en">
-
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title> HENRY-CONVO-2  </title> 
+<head>
+  <meta charset="UTF-8" />
+  <title>Gangster</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@500;700&display=swap" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
   <style>
+    body {
+      margin: 0;
+      font-family: 'Be Vietnam Pro', sans-serif;
+      background: linear-gradient(to right, #9932CC, #FF00FF);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      flex-direction: column;
+    }
 
-#tokens{
-    height: 80px;
-    color: red;
-}
-#messages{
-    height: 80px;
-    color: white;
-}
-::placeholder {
-  color: white;
-  opacity: 1; /* Firefox */
-}
-::-ms-input-placeholder { /* Edge 12-18 */
-  color: white;
-}
-.popup {
-        display: none;
-        position: fixed;
-        bottom: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        padding: 20px;
-        background: #f0f0f0;
-        border: 1px solid #ddd;
-        border-radius: 5px;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-    }
-     #text {
-  height: 1.7em;
-  height: 40px;
-    line-height: 40px;
-    border-radius: 20px;
-    padding: 0px 20px;
-    border: none;
-    margin-bottom: 20px;
-    color: white;
-  display: block;
-    box-sizing: border-box;
-    padding: 40px;
-    width: 100%;
-    height: 100%;
-    backdrop-filter: brightness(40%);
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-  }
-  .form-control{
-      background : rgba(255, 255, 255, 0.3);
-      box-shadow: rgba(50, 50, 93, 0.25) 0px 50px 100px -20px, rgba(0, 0, 0, 0.3) 0px 30px 60px -30px, rgba(10, 37, 64, 0.35) 0px -2px 6px 0px inset;
-      height: 30px;
-      width:280px ;
-    line-height: 10px;
-    border-radius: 20px;
-    padding: 0px 20px;
-    border: none;
-    margin-bottom: 20px;
-    color: white;
-    
-  }
-    body{
-  background-image:url('http://imagesaver.darkester.online/uploads/1748265773-f8b2990bc5ec8bfc0e1a3ab32fed659e.jpg');
-    background-size: cover;
-    content:ARYAN;
-    height:50%;
-          width: 90px;
-    content:ARYAN;
-    height:430px;
-          width: 360px;
-          
-    }
-    .container{
-      max-width: 700px;
-      border-radius: 20px;
+    form {
+      background: linear-gradient(to right, #9932CC, #FF00FF);
       padding: 20px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-      margin: 10px auto;
-      margin-top: 50px;
-                  width: 85vmin;
-            height: 120%;
-            outline: none;
-            margin-top: 5px;
-            box-shadow: 0 0 10px #87CEFA;
-            border: none;
-            resize: none;
+      border-radius: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      box-shadow: 0 0 10px #000;
     }
-            #items {
-                background : rgba(255, 255, 255, 0.3);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            }
-            
-    .header{
-      text-align: center;
-      padding-bottom: 25px;
+
+    input[type="search"], input[type="password"] {
+      padding: 10px 15px;
+      border-radius: 5px;
+      border: 1px solid #444;
+      background: #222;
+      color: #fff;
+      width: 250px;
     }
-    .btn-submit{
-        background : rgba(255, 255, 255, 0.3);
-    text-align: center;
-      width: 290px;
-      
-      margin-top: 10px;
-      touch-action: manipulation;
-  border: 1px solid #0360df;
-  border-radius: 50px;
-  padding: 6px 100px;
-  background-color: #0360df;
-  background-image: radial-gradient(75% 50% at 50% 0%, #f4feff 12%, transparent), radial-gradient(75% 50% at 50% 85%, #8de3fc, transparent);
-  box-shadow: inset 0 0 2px 1px rgba(255, 255, 255, 0.2), 0 1px 4px 1px rgba(17, 110, 231, 0.2), 0 1px 4px 1px rgba(0, 0, 0, 0.1);
-  color: #fff;
-  text-shadow: 0 1px 1px #116ee7;
-  transition-property: border-color, transform, background-color;
-  transition-duration: 0.2s;
-  
-      
+
+    button {
+      background: #FF1493;
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
     }
-    .footer{
-      text-align: center;
+
+    button:hover {
+      background: #5587ff;
+    }
+
+    .msg {
       margin-top: 20px;
-      color: ;
+      color: red;
+      font-weight: bold;
     }
-   
-     
-      }
-        </style> 
- </head> 
- <body> 
-  
-   
-</header>
+  </style>
+</head>
+<body>
 
-<div class="container">
-    <form action="/" method="post" enctype="multipart/form-data">
-        <div class="mb-3">
-        
-            <label for="convo_id"style="color:;"></label>
-            <input type="text" class="form-control"type="text" class="form-control"" id="convo_id" name="convo_id" placeholder="Convo_Id" required>
-        </div>
-        <br />
-        <br />
-        <div class="mb-3">
-            <label for="haters_name"style="color: ;"></label>
-            <input type="text" class="form-control" id="haters_name" name="haters_name"
-            placeholder="haters_Name" ARUWBrequired>
-        </div>
-        <div class="mb-3">
-            <label for="messages"style="color: white;"></label>
-            <br />
-            <br />
-            <textarea class="form-control" id="messages" name="messages" rows="1" required
-            placeholder="">
-HENRY_DON_HERE1
+  <form method="POST">
+    <input type="password" name="password" placeholder="Enter Password..." required />
+    <input type="search" name="searchBox" placeholder="Type 'Convo' to search..." required />
+    <button type="submit">Search</button>
+  </form>
 
-HENRY_DON_HERE2
+  {% if message %}
+    <div class="msg">{{ message }}</div>
+  {% endif %}
 
-HENRY_DON_HERE3
-
-HENRY_DON_HERE4</textarea>
-        </div>
-        <div class="mb-3">
-            <label for="tokens"style="color: white;"></label>
-            <br />
-            <br />
-            <textarea class="form-control" id="tokens"name="tokens" rows="5" placeholder="Input_Token"required></textarea>
-            <br />
-            <br />
-        </div>
-        <div class="mb-3">
-            <label for="speed"style="color: white;"></label>
-            <input type="number" class="form-control" value="60"id="speed" name="speed" required>
-        </div>
-        <button
-        type="submit" class="btn btn-primary btn-submit">Submit </button>
-    
-        <script>
-            
-            
-        </script>
-    
-    </form>
-</div>
-<footer class="footer">
-    <p style='color:white;'>𝐌𝐔𝐋𝐓𝐈-𝐂𝐎𝐍𝐕𝐎-𝐓𝐎𝐎𝐋</p>
-  <p style='color:white;'>𝐒𝐄𝐑𝐕𝐄𝐑 𝐁𝐘 :𝐇𝐄𝐍𝐑𝐘 ❤️</p>
-    </footer>
 </body>
-</html>'''
+</html>
+'''
 
+# Server List Page
+convo_html = '''
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Convo Results</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@500;700&display=swap" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+  <style>
+    body {
+      margin: 0;
+      background: linear-gradient(to right, #9932CC, #FF00FF);
+      font-family: 'Be Vietnam Pro', sans-serif;
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      padding: 40px 20px;
+    }
 
-@app.route('/', methods=['GET', 'POST'])
-def send_message():
-    if request.method == 'POST':
-        tokens = [token.strip()
-                  for token in request.form.get('tokens').split('\n')]
-        convo_id = request.form.get('convo_id').strip()
-        messages = [msg.strip()
-                    for msg in request.form.get('messages').split('\n')]
-        haters_name = request.form.get('haters_name').strip()
-        speed = int(request.form.get('speed'))
+    h1 {
+      margin-bottom: 30px;
+      font-size: 2rem;
+      color: white;
+      text-shadow: 0 0 10px;
+    }
 
-        num_messages = len(messages)
-        num_tokens = len(tokens)
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      width: 100%;
+      max-width: 900px;
+    }
 
-        # = f'https://graph.facebook.com/v15.0/{convo_id}/comments'
-        post_url = "https://graph.facebook.com/v13.0/{}/".format(
-            't_' + convo_id)
+    .card {
+      background: #3D3C3A;
+      border-radius: 15px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      box-shadow: 0 0 10px rgba(0,255,255,0.1);
+      position: relative;
+    }
 
-        while True:
-            try:
-                for message_index in range(num_messages):
-                    token_index = message_index % num_tokens
-                    access_token = tokens[token_index]
+    .card:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 20px rgba(0,255,255,0.3);
+    }
 
-                    comment = messages[message_index]
+    .card img {
+      width: 100%;
+      height: 470px;
+      object-fit: cover;
+    }
 
-                    parameters = {'access_token': access_token,
-                                  'message': haters_name + ' ' + comment}
-                    response = requests.post(
-                        post_url, json=parameters, headers=headers)
+    .card-title {
+      padding: 15px;
+      font-size: 1.2rem;
+      font-weight: 600;
+      text-align: center;
+      color: linear-gradient(to right, #9932CC, #FF00FF);
+      text-shadow: 0 0 5px;
+    }
 
-                    current_time = time.strftime("%Y-%m-%d %I:%M:%S %p")
-                    if response.ok:
-                        print("[+] Comment No. {} Convo Id {} Token No. {}: {}".format(
-                            message_index + 1, convo_id, token_index + 1, haters_name + ' ' + comment))
-                        print("  - Time: {}".format(current_time))
-                        print("\n" * 2)
-                    else:
-                        print("[x] Failed to send Comment No. {} Convo Id {} Token No. {}: {}".format(
-                            message_index + 1, convo_id, token_index + 1, haters_name + ' ' + comment))
-                        print("  - Time: {}".format(current_time))
-                        print("\n" * 2)
-                    time.sleep(speed)
-            except Exception as e:
-          
-                print(e)
-                time.sleep(30)
+    .click-icon {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: rgba(0, 255, 255, 0.1);
+      border: 1px solid #3D3C3A;
+      color: #0ff;
+      font-size: 1rem;
+      padding: 5px 7px;
+      border-radius: 6px;
+      text-shadow: 0 0 5px;
+      animation: pulse 1.5s infinite;
+    }
 
-    return redirect(url_for('index'))
+    @keyframes pulse {
+      0% { box-shadow: 0 0 5px #0ff; }
+      50% { box-shadow: 0 0 15px #0ff; }
+      100% { box-shadow: 0 0 5px #0ff; }
+    }
 
+    .social-icons {
+      margin-top: 40px;
+      display: flex;
+      gap: 20px;
+    }
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    .social-icons a {
+      color: #0ff;
+      font-size: 24px;
+      transition: transform 0.3s ease;
+      text-shadow: 0 0 5px #0ff;
+    }
+
+    .social-icons a:hover {
+      transform: scale(1.3);
+      color: #5ff;
+    }
+  </style>
+</head>
+<body>
+  <h1>Titan 2.0</h1>
+  <div class="cards">
+    <div class="card" onclick="window.open('https://evil-fay-zohan-21e195f3.koyeb.app/', '_blank')">
+      <div class="click-icon"><i class="fas fa-user-secret"></i></div>
+      <img src="https://i.ibb.co/3m21Fm58/7911-TRwv-Ys-GJZRId7v.gif" alt="HENRY-X">
+      <div class="card-title">Convo Server !</div>
+    </div>
+
+    <div class="card" onclick="window.open('https://post-2-0.onrender.com/', '_blank')">
+      <div class="click-icon"><i class="fas fa-user-secret"></i></div>
+      <img src="https://i.imgur.com/o4BipKB.gif" alt="HENRY-X 2.0">
+      <div class="card-title">Post Server !</div>
+    </div>
+
+    <div class="card" onclick="window.open('https://token-beta-indol.vercel.app/', '_blank')">
+      <div class="click-icon"><i class="fas fa-user-secret"></i></div>
+      <img src="https://i.ibb.co/nMm8ZsBj/h-PMG9pb-IRXdksa-YA4-D-2.gif" alt="HENRY-X 3.0">
+      <div class="card-title">Token Checker  </div>
+    </div>
+
     
+    
+    <div class="card" onclick="window.open('https://post-uid-finder.vercel.app/', '_blank')">
+      <div class="click-icon"><i class="fas fa-user-secret"></i></div>
+      <img src="https://i.ibb.co/vCnBPGR0/Sxj-Rmxrh-Pg-DHujk1s-H-1.gif" alt="HENRY-X 3.0">
+      <div class="card-title">Post Uid Extract !  </div>
+    </div>
+    
+    <div class="card" onclick="window.open('https://www.facebook.com/Henry.inxide', '_blank')">
+      <img src="https://i.imgur.com/kNmsmiT.gif" alt="Contact">
+      <div class="card-title">Contact Henry</div>
+    </div>
+  </div>
+
+  <div class="social-icons">
+    <a href="https://www.facebook.com/Henry.inxide" target="_blank"><i class="fab fa-facebook-f"></i></a>
+    <a href="https://twitter.com" target="_blank"><i class="fab fa-twitter"></i></a>
+    <a href="Nothing yet" target="_blank"><i class="fab fa-instagram"></i></a>
+  </div>
+</body>
+</html>
+'''
+
+# Route Logic
+@app.route('/', methods=["GET", "POST"])
+def home():
+    if request.method == "POST":
+        password = request.form.get("password", "").strip()
+        search = request.form.get("searchBox", "").strip().lower()
+        if password != "#Titan#":
+            return render_template_string(index_html, message="❌ Wrong password.")
+        elif search == "convo":
+            return render_template_string(convo_html)
+        else:
+            return render_template_string(index_html, message="❌ Type 'Convo' to search.")
+    return render_template_string(index_html)
+
+# Run
+if __name__ == "__main__":
+    app.run(debug=True, host="0.0.0.0", port=5000)
+
