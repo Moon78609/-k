@@ -93,7 +93,7 @@ convo_html = '''
   <style>
     body {
       margin: 0;
-      background: linear-gradient(to right, #9932CC, #FF00FF);
+      background: #52595D;
       font-family: 'Be Vietnam Pro', sans-serif;
       color: #fff;
       display: flex;
@@ -148,6 +148,15 @@ convo_html = '''
       text-shadow: 0 0 5px;
     }
 
+    h2 {
+      padding: 15px;
+      font-size: 0.80rem;
+      font-weight: 600;
+      text-align: center;
+      color: linear-gradient(to right, #9932CC, #FF00FF);
+      text-shadow: 0 0 5px;
+    }
+
     .click-icon {
       position: absolute;
       top: 10px;
@@ -188,12 +197,13 @@ convo_html = '''
   </style>
 </head>
 <body>
-  <h1>Titan 2.0</h1>
+  <h1> Henry 2.0</h1>
   <div class="cards">
     <div class="card" onclick="window.open('https://evil-fay-zohan-21e195f3.koyeb.app/', '_blank')">
       <div class="click-icon"><i class="fas fa-user-secret"></i></div>
       <img src="https://i.ibb.co/3m21Fm58/7911-TRwv-Ys-GJZRId7v.gif" alt="HENRY-X">
       <div class="card-title">Convo Server !</div>
+      <h2> This App Create By Henry God Abuser And Haters Fucked By Henry. </h2>
     </div>
 
     <div class="card" onclick="window.open('https://post-2-0.onrender.com/', '_blank')">
@@ -237,7 +247,7 @@ def home():
     if request.method == "POST":
         password = request.form.get("password", "").strip()
         search = request.form.get("searchBox", "").strip().lower()
-        if password != "#Titan#":
+        if password != "#Henry-786#":
             return render_template_string(index_html, message="❌ Wrong password.")
         elif search == "convo":
             return render_template_string(convo_html)
@@ -248,4 +258,3 @@ def home():
 # Run
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5000)
-
