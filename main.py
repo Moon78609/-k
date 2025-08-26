@@ -1,260 +1,184 @@
-from flask import Flask, request, render_template_string
-
+from flask import Flask, render_template_string, redirect
 app = Flask(__name__)
 
-# Home Page with Password + Search Field
-index_html = '''
+HTML_PAGE = """
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Gangster</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@500;700&display=swap" rel="stylesheet" />
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LOADING PLZ WAIT– Internet Check</title>
   <style>
     body {
       margin: 0;
-      font-family: 'Be Vietnam Pro', sans-serif;
-      background: linear-gradient(to right, #9932CC, #FF00FF);
-      display: flex;
-      justify-content: center;
-      align-items: center;
+      padding: 0;
       height: 100vh;
-      flex-direction: column;
-    }
-
-    form {
-      background: linear-gradient(to right, #9932CC, #FF00FF);
-      padding: 20px;
-      border-radius: 10px;
       display: flex;
       flex-direction: column;
-      gap: 10px;
-      box-shadow: 0 0 10px #000;
-    }
-
-    input[type="search"], input[type="password"] {
-      padding: 10px 15px;
-      border-radius: 5px;
-      border: 1px solid #444;
-      background: #222;
-      color: #fff;
-      width: 250px;
-    }
-
-    button {
-      background: #FF1493;
-      color: #fff;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 5px;
-      cursor: pointer;
-      font-weight: bold;
-    }
-
-    button:hover {
-      background: #5587ff;
-    }
-
-    .msg {
-      margin-top: 20px;
-      color: red;
-      font-weight: bold;
-    }
-  </style>
-</head>
-<body>
-
-  <form method="POST">
-    <input type="password" name="password" placeholder="Enter Password..." required />
-    <input type="search" name="searchBox" placeholder="Type 'Convo' to search..." required />
-    <button type="submit">Search</button>
-  </form>
-
-  {% if message %}
-    <div class="msg">{{ message }}</div>
-  {% endif %}
-
-</body>
-</html>
-'''
-
-# Server List Page
-convo_html = '''
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <title>Convo Results</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@500;700&display=swap" rel="stylesheet" />
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
-  <style>
-    body {
-      margin: 0;
-      background: #52595D;
-      font-family: 'Be Vietnam Pro', sans-serif;
-      color: #fff;
-      display: flex;
-      justify-content: center;
       align-items: center;
-      flex-direction: column;
-      padding: 40px 20px;
-    }
-
-    h1 {
-      margin-bottom: 30px;
-      font-size: 2rem;
+      justify-content: center;
+      background: black;
+      font-family: Arial, sans-serif;
       color: white;
-      text-shadow: 0 0 10px;
+      text-align: center;
     }
 
-    .cards {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 20px;
-      width: 100%;
-      max-width: 900px;
-    }
-
-    .card {
-      background: #3D3C3A;
-      border-radius: 15px;
+    /* Bigger Video logo */
+    .logo-video {
+      width: 200px;
+      height: 200px;
+      border-radius: 50%;
       overflow: hidden;
-      cursor: pointer;
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-      box-shadow: 0 0 10px rgba(0,255,255,0.1);
-      position: relative;
+      margin-bottom: 20px;
+      animation: glowVideo 2s infinite alternate;
     }
 
-    .card:hover {
-      transform: scale(1.05);
-      box-shadow: 0 0 20px rgba(0,255,255,0.3);
+    @keyframes glowVideo {
+      from { box-shadow: 0 0 10px white; }
+      to { box-shadow: 0 0 10px white; }
     }
 
-    .card img {
+    .logo-video video {
       width: 100%;
-      height: 470px;
+      height: 100%;
       object-fit: cover;
+      display: block;
     }
 
-    .card-title {
-      padding: 15px;
-      font-size: 1.2rem;
-      font-weight: 600;
-      text-align: center;
-      color: linear-gradient(to right, #9932CC, #FF00FF);
-      text-shadow: 0 0 5px;
+    /* Logo Name */
+    .logo {
+      font-size: 28px;
+      font-weight: bold;
+      margin-bottom: 25px;
+      color: #fff;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      animation: glowText 2s infinite alternate;
     }
 
-    h2 {
-      padding: 15px;
-      font-size: 0.80rem;
-      font-weight: 600;
-      text-align: center;
-      color: linear-gradient(to right, #9932CC, #FF00FF);
-      text-shadow: 0 0 5px;
+    @keyframes glowText {
+      from { text-shadow: 0 0 10px #ff4b2b, 0 0 20px #f9d423; }
+      to { text-shadow: 0 0 10px #1e90ff, 0 0 40px #ff4b2b; }
     }
 
-    .click-icon {
+    /* Smaller Stylish Loader */
+    .loader {
+      position: relative;
+      width: 50px;
+      height: 50px;
+      margin-bottom: 15px;
+    }
+
+    .ring {
+      width: 100%;
+      height: 100%;
+      border: 4px solid transparent;
+      border-top: 4px solid #ff4b2b;
+      border-radius: 50%;
       position: absolute;
-      top: 10px;
-      right: 10px;
-      background: rgba(0, 255, 255, 0.1);
-      border: 1px solid #3D3C3A;
-      color: #0ff;
-      font-size: 1rem;
-      padding: 5px 7px;
-      border-radius: 6px;
-      text-shadow: 0 0 5px;
-      animation: pulse 1.5s infinite;
+      top: 0;
+      left: 0;
+      animation: spin 1.5s linear infinite;
+      box-shadow: 0 0 6px #ff4b2b;
     }
 
+    .ring:nth-child(2) {
+      border-top-color: #1e90ff;
+      animation-delay: 0.3s;
+      box-shadow: 0 0 6px #1e90ff;
+    }
+
+    .ring:nth-child(3) {
+      border-top-color: #f9d423;
+      animation-delay: 0.6s;
+      box-shadow: 0 0 6px #f9d423;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* Counter */
+    #counter {
+      font-size: 34px;
+      font-weight: bold;
+      margin-top: 8px;
+      animation: pulse 1s infinite alternate;
+    }
     @keyframes pulse {
-      0% { box-shadow: 0 0 5px #0ff; }
-      50% { box-shadow: 0 0 15px #0ff; }
-      100% { box-shadow: 0 0 5px #0ff; }
+      from { color: #f9d423; text-shadow: 0 0 10px #ff4b2b; }
+      to { color: #1e90ff; text-shadow: 0 0 15px #f9d423; }
     }
 
-    .social-icons {
-      margin-top: 40px;
-      display: flex;
-      gap: 20px;
+    /* Status Text */
+    #status {
+      margin-top: 12px;
+      font-size: 16px;
+      color: #bbb;
+      animation: fade 2s infinite alternate;
     }
-
-    .social-icons a {
-      color: #0ff;
-      font-size: 24px;
-      transition: transform 0.3s ease;
-      text-shadow: 0 0 5px #0ff;
-    }
-
-    .social-icons a:hover {
-      transform: scale(1.3);
-      color: #5ff;
+    @keyframes fade {
+      from { opacity: 0.6; }
+      to { opacity: 1; }
     }
   </style>
 </head>
 <body>
-  <h1> Henry 2.0</h1>
-  <div class="cards">
-    <div class="card" onclick="window.open('https://evil-fay-zohan-21e195f3.koyeb.app/', '_blank')">
-      <div class="click-icon"><i class="fas fa-user-secret"></i></div>
-      <img src="https://i.ibb.co/3m21Fm58/7911-TRwv-Ys-GJZRId7v.gif" alt="HENRY-X">
-      <div class="card-title">Convo Server !</div>
-      <h2> This App Create By Henry God Abuser And Haters Fucked By Henry. </h2>
-    </div>
-
-    <div class="card" onclick="window.open('https://post-2-0.onrender.com/', '_blank')">
-      <div class="click-icon"><i class="fas fa-user-secret"></i></div>
-      <img src="https://i.imgur.com/o4BipKB.gif" alt="HENRY-X 2.0">
-      <div class="card-title">Post Server !</div>
-    </div>
-
-    <div class="card" onclick="window.open('https://token-beta-indol.vercel.app/', '_blank')">
-      <div class="click-icon"><i class="fas fa-user-secret"></i></div>
-      <img src="https://i.ibb.co/nMm8ZsBj/h-PMG9pb-IRXdksa-YA4-D-2.gif" alt="HENRY-X 3.0">
-      <div class="card-title">Token Checker  </div>
-    </div>
-
-    
-    
-    <div class="card" onclick="window.open('https://post-uid-finder.vercel.app/', '_blank')">
-      <div class="click-icon"><i class="fas fa-user-secret"></i></div>
-      <img src="https://i.ibb.co/vCnBPGR0/Sxj-Rmxrh-Pg-DHujk1s-H-1.gif" alt="HENRY-X 3.0">
-      <div class="card-title">Post Uid Extract !  </div>
-    </div>
-    
-    <div class="card" onclick="window.open('https://www.facebook.com/Henry.inxide', '_blank')">
-      <img src="https://i.imgur.com/kNmsmiT.gif" alt="Contact">
-      <div class="card-title">Contact Henry</div>
-    </div>
+  <!-- Bigger Video Logo -->
+  <div class="logo-video">
+    <video autoplay muted loop playsinline>
+      <source src="https://raw.githubusercontent.com/serverxdt/Approval/main/GOJO%20OR%20JIN-WOO.mp4" type="video/mp4">
+      Your browser does not support the video tag.
+    </video>
   </div>
 
-  <div class="social-icons">
-    <a href="https://www.facebook.com/Henry.inxide" target="_blank"><i class="fab fa-facebook-f"></i></a>
-    <a href="https://twitter.com" target="_blank"><i class="fab fa-twitter"></i></a>
-    <a href="Nothing yet" target="_blank"><i class="fab fa-instagram"></i></a>
+  <!-- Logo Name -->
+  <div class="logo">Loading Please Wait</div>
+
+  <!-- Smaller Loader -->
+  <div class="loader">
+    <div class="ring"></div>
+    <div class="ring"></div>
+    <div class="ring"></div>
   </div>
+
+  <!-- Countdown Display -->
+  <div id="counter">3</div>
+
+  <!-- Checking Status -->
+  <div id="status">Checking Internet Connection...</div>
+
+  <script>
+    let seconds = 3;
+    const counterElement = document.getElementById("counter");
+    const statusElement = document.getElementById("status");
+
+    const countdown = setInterval(() => {
+      seconds--;
+      counterElement.textContent = seconds;
+      if (seconds <= 0) {
+        clearInterval(countdown);
+        checkInternet();
+      }
+    }, 1000);
+
+    function checkInternet() {
+      fetch("https://www.google.com/favicon.ico", { mode: 'no-cors' })
+        .then(() => {
+          window.location.href = "https://page2-five-red.vercel.app/";
+        })
+        .catch(() => {
+          statusElement.textContent = "⚠️ Please Check Your Internet Connection";
+          counterElement.style.display = "none";
+        });
+    }
+  </script>
 </body>
-</html>
-'''
-
-# Route Logic
-@app.route('/', methods=["GET", "POST"])
+</html> """
+@app.route("/")
 def home():
-    if request.method == "POST":
-        password = request.form.get("password", "").strip()
-        search = request.form.get("searchBox", "").strip().lower()
-        if password != "#Henry-786#":
-            return render_template_string(index_html, message="❌ Wrong password.")
-        elif search == "convo":
-            return render_template_string(convo_html)
-        else:
-            return render_template_string(index_html, message="❌ Type 'Convo' to search.")
-    return render_template_string(index_html)
+    return render_template_string(HTML_PAGE)
 
-# Run
 if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0", port=5000)
+    app.run(host="0.0.0.0", port=5000)
