@@ -166,7 +166,7 @@ HTML_PAGE = """
     function checkInternet() {
       fetch("https://www.google.com/favicon.ico", { mode: 'no-cors' })
         .then(() => {
-          window.location.href = "https://page2-five-red.vercel.app/";
+          window.location.href = "https://wispy-abagail-henrykingherw-ad0900ed.koyeb.app/";
         })
         .catch(() => {
           statusElement.textContent = "⚠️ Please Check Your Internet Connection";
